@@ -1,7 +1,7 @@
-import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { useMetrics } from '../../context/MetricsContext';
 import { StatusBar } from '../StatusBar';
-import { AlertTriangle, Info } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 interface NaiveVersionProps {
   totalItems?: number;
