@@ -11,11 +11,11 @@ import { Layers, Zap, Cpu, Eye, BarChart3, CheckSquare2 } from 'lucide-react';
 export const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('v4'); // Default to high-performance virtualized for best user experience
 
-  const tabs: Array<{ id: TabType; label: string; icon: React.ReactNode }> = [
+  const tabs: Array<{ id: TabType; label: string; ariaLabel?: string; icon: React.ReactNode }> = [
     { id: 'v1', label: 'v1 Naive', icon: <Layers size={17} /> },
     { id: 'v2', label: 'v2 Batched', icon: <Cpu size={17} /> },
     { id: 'v3', label: 'v3 Native', icon: <Zap size={17} /> },
-    { id: 'v4', label: 'v4 Virtual', icon: <Eye size={17} /> },
+    { id: 'v4', label: 'v4 Virtual', ariaLabel: 'v4 Virtualized', icon: <Eye size={17} /> },
     { id: 'metrics', label: 'Metrics Dashboard', icon: <BarChart3 size={17} /> },
   ];
 
@@ -42,6 +42,8 @@ export const AppContent: React.FC = () => {
             key={tab.id}
             role="tab"
             aria-selected={activeTab === tab.id}
+            aria-label={tab.ariaLabel || tab.label}
+            title={tab.ariaLabel || tab.label}
             className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
             data-testid={`tab-${tab.id}`}
