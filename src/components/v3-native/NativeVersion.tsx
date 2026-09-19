@@ -11,8 +11,8 @@ export const NativeVersion: React.FC<NativeVersionProps> = ({ totalItems = 1_000
   const { updateMetric, measureCurrentDOMNodes, measureCurrentHeapMB } = useMetrics();
 
   const isJSDOM = typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom');
-  const [renderFull, setRenderFull] = useState<boolean>(!isJSDOM && totalItems <= 50_000);
-  const effectiveCount = isJSDOM ? Math.min(totalItems, 500) : (renderFull ? totalItems : Math.min(totalItems, 50_000));
+  const [safeMode, setSafeMode] = useState<boolean>(false);
+  const effectiveCount = isJSDOM ? Math.min(totalItems, 500) : (safeMode ? Math.min(totalItems, 10_000) : totalItems);
 
   const containerRef = useRef<HTMLDivElement>(null);
   // State managed outside React render cycle
@@ -85,10 +85,10 @@ export const NativeVersion: React.FC<NativeVersionProps> = ({ totalItems = 1_000
 
     setTimeout(() => {
       const domNodes = measureCurrentDOMNodes();
-      const heap = measureCurrentHeapMB() || (renderFull ? 140 : 40);
+      const heap = measureCurrentHeapMB() || 140;
       updateMetric('v3', {
         mountTime: tMount,
-        domNodes: renderFull ? totalItems * 2 + 45 : domNodes,
+        domNodes: !safeMode ? totalItems * 2 + 45 : domNodes,
         heapUsage: heap,
         eventListeners: 1, // Exactly 1 listener on container
       });
@@ -97,7 +97,7 @@ export const NativeVersion: React.FC<NativeVersionProps> = ({ totalItems = 1_000
     return () => {
       container.removeEventListener('click', handleClick);
     };
-  }, [effectiveCount, measureCurrentDOMNodes, measureCurrentHeapMB, renderFull, totalItems, updateMetric]);
+  }, [effectiveCount, measureCurrentDOMNodes, measureCurrentHeapMB, safeMode, totalItems, updateMetric]);
 
   const isAllChecked = totalItems > 0 && checkedCount === totalItems;
 
@@ -145,23 +145,21 @@ export const NativeVersion: React.FC<NativeVersionProps> = ({ totalItems = 1_000
       </div>
 
       {/* Safety Banner */}
-      {!renderFull && !isJSDOM && (
+      {!isJSDOM && (
         <div className="notice-box">
           <AlertTriangle size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
-          <div>
-            <strong>High DOM Node Scale Notice:</strong> Even with native DOM and DocumentFragment, creating 1,000,000 live DOM elements creates 2,000,000 nodes.
-            Currently mounted {effectiveCount.toLocaleString()} native elements with 1 delegated listener.
-            <div style={{ marginTop: '8px' }}>
-              <button
-                type="button"
-                className="btn btn-purple"
-                style={{ fontSize: '0.8rem', padding: '4px 12px' }}
-                onClick={() => setRenderFull(true)}
-              >
-                Render Full 1,000,000 Native DOM Nodes
-              </button>
-            </div>
+          <div style={{ flexGrow: 1 }}>
+            <strong>1,000,000 Native Element Scale:</strong> Appends 1,000,000 native DOM nodes in a single <code>DocumentFragment</code> with 1 delegated listener.
+            Currently mounted <strong>{effectiveCount.toLocaleString('en-US')}</strong> native elements.
           </div>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ fontSize: '0.8rem', padding: '4px 12px', whiteSpace: 'nowrap' }}
+            onClick={() => setSafeMode(prev => !prev)}
+          >
+            {safeMode ? 'Switch to Full 1,000,000 Scale' : 'Switch to Safe Preview (10,000)'}
+          </button>
         </div>
       )}
 

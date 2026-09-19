@@ -123,6 +123,25 @@ describe('High-Performance List UI & Event Delegation', () => {
       expect(screen.getByTestId('stat-checked')).toHaveTextContent('0');
       expect(screen.getByTestId('toggle-all-button')).toHaveTextContent('Check All');
     });
+
+    it('allows toggling individual items after Check All is active', () => {
+      render(
+        <MetricsProvider>
+          <NaiveVersion totalItems={5} />
+        </MetricsProvider>
+      );
+
+      const toggleAllBtn = screen.getByTestId('toggle-all-button');
+      fireEvent.click(toggleAllBtn);
+      expect(screen.getByTestId('stat-checked')).toHaveTextContent('5');
+
+      // Uncheck item 2
+      const checkbox2 = screen.getByLabelText(/Item 2/i) as HTMLInputElement;
+      fireEvent.click(checkbox2);
+      expect(checkbox2).not.toBeChecked();
+      expect(screen.getByTestId('stat-checked')).toHaveTextContent('4');
+      expect(screen.getByTestId('toggle-all-button')).toHaveTextContent('Check All');
+    });
   });
 
   describe('v2: Batched Implementation with React.memo (Requirement 2)', () => {
@@ -278,6 +297,26 @@ describe('High-Performance List UI & Event Delegation', () => {
         expect(screen.getByTestId('metric-mountTime-v4')).toHaveTextContent('4.8 ms');
         expect(screen.getByTestId('metric-eventListeners-v3')).toHaveTextContent('1');
         expect(screen.getByTestId('metric-eventListeners-v4')).toHaveTextContent('35');
+      });
+    });
+
+    it('resets metrics table when clicking Reset Live Data', async () => {
+      render(
+        <MetricsProvider>
+          <MetricsDashboard onSelectTab={() => {}} />
+        </MetricsProvider>
+      );
+
+      // Populate first
+      fireEvent.click(screen.getByTestId('load-benchmark-btn'));
+      await waitFor(() => {
+        expect(screen.getByTestId('metric-mountTime-v1')).toHaveTextContent('8,420 ms');
+      });
+
+      // Reset
+      fireEvent.click(screen.getByTestId('reset-metrics-btn'));
+      await waitFor(() => {
+        expect(screen.getByTestId('metric-mountTime-v1')).toHaveTextContent('Visit v1 Naive');
       });
     });
   });

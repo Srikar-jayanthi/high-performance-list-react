@@ -57,8 +57,8 @@ export const BatchedVersion: React.FC<BatchedVersionProps> = ({ totalItems = 1_0
 
   // Detect JSDOM test runner
   const isJSDOM = typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom');
-  const [renderFull, setRenderFull] = useState<boolean>(!isJSDOM && totalItems <= 20_000);
-  const effectiveCount = isJSDOM ? Math.min(totalItems, 500) : (renderFull ? totalItems : Math.min(totalItems, 5_000));
+  const [safeMode, setSafeMode] = useState<boolean>(false);
+  const effectiveCount = isJSDOM ? Math.min(totalItems, 500) : (safeMode ? Math.min(totalItems, 5_000) : totalItems);
 
   const [state, dispatch] = useReducer(reducer, null, () => new Uint8Array(totalItems));
   const [checkedCount, setCheckedCount] = useState<number>(0);
@@ -78,16 +78,16 @@ export const BatchedVersion: React.FC<BatchedVersionProps> = ({ totalItems = 1_0
 
       setTimeout(() => {
         const domNodes = measureCurrentDOMNodes();
-        const heap = measureCurrentHeapMB() || (renderFull ? 210 : 35);
+        const heap = measureCurrentHeapMB() || 210;
         updateMetric('v2', {
           mountTime: duration,
-          domNodes: renderFull ? totalItems * 3 + 45 : domNodes,
+          domNodes: !safeMode ? totalItems * 3 + 45 : domNodes,
           heapUsage: heap,
           eventListeners: totalItems,
         });
       }, 50);
     }
-  }, [measureCurrentDOMNodes, measureCurrentHeapMB, renderFull, totalItems, updateMetric]);
+  }, [measureCurrentDOMNodes, measureCurrentHeapMB, safeMode, totalItems, updateMetric]);
 
   const onItemClicked = useCallback((index: number) => {
     clickStartTime.current = performance.now();
@@ -139,27 +139,21 @@ export const BatchedVersion: React.FC<BatchedVersionProps> = ({ totalItems = 1_0
       </div>
 
       {/* Safety Banner */}
-      {!renderFull && !isJSDOM && (
+      {!isJSDOM && (
         <div className="notice-box">
           <AlertTriangle size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
-          <div>
-            <strong>High React Component Count Notice:</strong> While memory overhead is reduced with <code>Uint8Array</code>, React still mounts {totalItems.toLocaleString()} component instances if rendered un-virtualized.
-            Currently displaying an active preview of {effectiveCount.toLocaleString()} items.
-            <div style={{ marginTop: '8px' }}>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                style={{ fontSize: '0.8rem', padding: '4px 12px' }}
-                onClick={() => {
-                  mountStartTime.current = performance.now();
-                  hasRecordedMount.current = false;
-                  setRenderFull(true);
-                }}
-              >
-                Render Full 1,000,000 Rows (Stress Test)
-              </button>
-            </div>
+          <div style={{ flexGrow: 1 }}>
+            <strong>1,000,000 Component Scale Notice:</strong> Renders 1,000,000 <code>React.memo</code> rows backed by a 1 MB <code>Uint8Array</code>.
+            Currently rendering <strong>{effectiveCount.toLocaleString('en-US')}</strong> rows.
           </div>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ fontSize: '0.8rem', padding: '4px 12px', whiteSpace: 'nowrap' }}
+            onClick={() => setSafeMode(prev => !prev)}
+          >
+            {safeMode ? 'Switch to Full 1,000,000 Scale' : 'Switch to Safe Preview (5,000)'}
+          </button>
         </div>
       )}
 

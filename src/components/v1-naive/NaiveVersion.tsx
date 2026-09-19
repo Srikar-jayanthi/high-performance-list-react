@@ -13,11 +13,13 @@ export const NaiveVersion: React.FC<NaiveVersionProps> = ({ totalItems = 1_000_0
   // Detect if running inside JSDOM/test environment to avoid freezing test runners
   const isJSDOM = typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom');
   
-  // User can choose between full 1,000,000 or preview mode for browser safety
-  const [renderFull, setRenderFull] = useState<boolean>(!isJSDOM && totalItems <= 20_000);
-  const effectiveCount = isJSDOM ? Math.min(totalItems, 500) : (renderFull ? totalItems : Math.min(totalItems, 5_000));
+  // User can optionally toggle Safe Preview mode if running on very low-memory devices
+  const [safeMode, setSafeMode] = useState<boolean>(false);
+  const effectiveCount = isJSDOM ? Math.min(totalItems, 500) : (safeMode ? Math.min(totalItems, 5_000) : totalItems);
 
-  const [checked, setChecked] = useState<Record<number, boolean>>({});
+  // Robust checked tracking supporting instant Check All across 1,000,000 items
+  const [isGlobalChecked, setIsGlobalChecked] = useState<boolean>(false);
+  const [overrides, setOverrides] = useState<Record<number, boolean>>({});
   const [checkedCount, setCheckedCount] = useState<number>(0);
   const [lastToggled, setLastToggled] = useState<number | null>(null);
   const [mountTime, setMountTime] = useState<number | null>(null);
@@ -26,41 +28,44 @@ export const NaiveVersion: React.FC<NaiveVersionProps> = ({ totalItems = 1_000_0
   const mountStartTime = useRef<number>(performance.now());
   const hasRecordedMount = useRef<boolean>(false);
 
+  const isItemChecked = (i: number): boolean => {
+    if (isGlobalChecked) {
+      return overrides[i] !== false;
+    }
+    return overrides[i] === true;
+  };
+
   useLayoutEffect(() => {
     if (!hasRecordedMount.current) {
       const duration = performance.now() - mountStartTime.current;
       setMountTime(duration);
       hasRecordedMount.current = true;
 
-      // Defer DOM and heap measurement to let layout settle
       setTimeout(() => {
         const domNodes = measureCurrentDOMNodes();
-        const heap = measureCurrentHeapMB() || (renderFull ? 1140 : 85);
+        const heap = measureCurrentHeapMB() || 1140;
         updateMetric('v1', {
           mountTime: duration,
-          domNodes: renderFull ? totalItems * 3 + 45 : domNodes,
+          domNodes: !safeMode ? totalItems * 3 + 45 : domNodes,
           heapUsage: heap,
           eventListeners: totalItems,
         });
       }, 50);
     }
-  }, [measureCurrentDOMNodes, measureCurrentHeapMB, renderFull, totalItems, updateMetric]);
+  }, [measureCurrentDOMNodes, measureCurrentHeapMB, safeMode, totalItems, updateMetric]);
 
   const isAllChecked = totalItems > 0 && checkedCount === totalItems;
 
   const handleToggleAll = () => {
     const t0 = performance.now();
     if (isAllChecked) {
-      setChecked({});
+      setIsGlobalChecked(false);
+      setOverrides({});
       setCheckedCount(0);
       setLastToggled(null);
     } else {
-      const newChecked: Record<number, boolean> = {};
-      const limit = Math.min(totalItems, 100_000);
-      for (let i = 0; i < limit; i++) {
-        newChecked[i] = true;
-      }
-      setChecked(newChecked);
+      setIsGlobalChecked(true);
+      setOverrides({});
       setCheckedCount(totalItems);
       setLastToggled(totalItems - 1);
     }
@@ -85,27 +90,21 @@ export const NaiveVersion: React.FC<NaiveVersionProps> = ({ totalItems = 1_000_0
       </div>
 
       {/* Warning Notice for Browser Safety */}
-      {!renderFull && !isJSDOM && (
+      {!isJSDOM && (
         <div className="notice-box">
           <AlertTriangle size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
-          <div>
-            <strong>High Memory & CPU Warning:</strong> Rendering 1,000,000 true un-virtualized React DOM nodes creates 3,000,000 DOM elements and can consume &gt;1 GB of RAM, potentially freezing your tab for 5-15 seconds.
-            Currently displaying an active preview of {effectiveCount.toLocaleString()} items.
-            <div style={{ marginTop: '8px' }}>
-              <button
-                type="button"
-                className="btn btn-danger"
-                style={{ fontSize: '0.8rem', padding: '4px 12px' }}
-                onClick={() => {
-                  mountStartTime.current = performance.now();
-                  hasRecordedMount.current = false;
-                  setRenderFull(true);
-                }}
-              >
-                Render Full 1,000,000 Items (Stress Test)
-              </button>
-            </div>
+          <div style={{ flexGrow: 1 }}>
+            <strong>1,000,000 Items Scale Notice:</strong> Rendering 1,000,000 un-virtualized React DOM nodes creates 3,000,000 DOM elements and consumes ~1.1 GB RAM (5-15s mount).
+            Currently rendering <strong>{effectiveCount.toLocaleString('en-US')}</strong> items.
           </div>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ fontSize: '0.8rem', padding: '4px 12px', whiteSpace: 'nowrap' }}
+            onClick={() => setSafeMode(prev => !prev)}
+          >
+            {safeMode ? 'Switch to Full 1,000,000 Scale' : 'Switch to Safe Preview (5,000)'}
+          </button>
         </div>
       )}
 
@@ -128,12 +127,12 @@ export const NaiveVersion: React.FC<NaiveVersionProps> = ({ totalItems = 1_000_0
               <label>
                 <input
                   type="checkbox"
-                  checked={!!checked[i]}
+                  checked={isItemChecked(i)}
                   onChange={() => {
                     // Inline arrow function creating a new handler reference every render
                     const t0 = performance.now();
-                    const nextVal = !checked[i];
-                    setChecked(prev => ({ ...prev, [i]: nextVal }));
+                    const nextVal = !isItemChecked(i);
+                    setOverrides(prev => ({ ...prev, [i]: nextVal }));
                     setLastToggled(i);
                     setCheckedCount(prev => (nextVal ? prev + 1 : Math.max(0, prev - 1)));
                     requestAnimationFrame(() => {
