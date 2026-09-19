@@ -55,22 +55,22 @@ export const NativeVersion: React.FC<NativeVersionProps> = ({ totalItems = 1_000
     const handleClick = (event: MouseEvent) => {
       const clickStart = performance.now();
       const target = event.target as HTMLElement;
+
+      // Inside the handler, check event.target to see if a checkbox was clicked
+      const isCheckbox = target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'checkbox';
+      if (!isCheckbox) {
+        return;
+      }
+
       const targetLabel = target.closest('label[data-index]') as HTMLElement | null;
       if (!targetLabel) return;
 
       const index = Number(targetLabel.dataset.index);
       if (isNaN(index)) return;
 
-      const checkbox = targetLabel.querySelector('input[type="checkbox"]') as HTMLInputElement | null;
-      
-      // If user clicked the label rather than checkbox directly, toggle checkbox
-      const currentVal = stateRef.current[index];
-      const nextVal = currentVal === 1 ? 0 : 1;
+      const checkbox = target as HTMLInputElement;
+      const nextVal: 0 | 1 = checkbox.checked ? 1 : 0;
       stateRef.current[index] = nextVal;
-
-      if (checkbox && target !== checkbox) {
-        checkbox.checked = nextVal === 1;
-      }
 
       // Minimal update to React state for summary statistics
       setCheckedCount(prev => (nextVal === 1 ? prev + 1 : Math.max(0, prev - 1)));

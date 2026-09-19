@@ -13,7 +13,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onSelectTab 
     {
       key: 'mountTime',
       label: 'Mount time (ms)',
-      format: (val: number | null) => (val !== null ? `${val < 10 ? val.toFixed(1) : Math.round(val).toLocaleString()} ms` : null),
+      format: (val: number | null) => (val !== null ? `${val < 10 ? val.toFixed(1) : Math.round(val).toLocaleString('en-US')} ms` : null),
       isBest: (val: number | null, allVals: (number | null)[]) => {
         const valid = allVals.filter((v): v is number => v !== null);
         return val !== null && valid.length > 1 && val === Math.min(...valid);
@@ -26,7 +26,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onSelectTab 
     {
       key: 'domNodes',
       label: 'DOM nodes after mount',
-      format: (val: number | null) => (val !== null ? val.toLocaleString() : null),
+      format: (val: number | null) => (val !== null ? val.toLocaleString('en-US') : null),
       isBest: (val: number | null, allVals: (number | null)[]) => {
         const valid = allVals.filter((v): v is number => v !== null);
         return val !== null && valid.length > 1 && val === Math.min(...valid);
@@ -65,7 +65,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onSelectTab 
     {
       key: 'eventListeners',
       label: 'Event listeners on container',
-      format: (val: number | null) => (val !== null ? val.toLocaleString() : null),
+      format: (val: number | null) => (val !== null ? val.toLocaleString('en-US') : null),
       isBest: (val: number | null, allVals: (number | null)[]) => {
         const valid = allVals.filter((v): v is number => v !== null);
         return val !== null && valid.length > 1 && val === Math.min(...valid);

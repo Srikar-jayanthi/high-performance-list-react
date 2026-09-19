@@ -30,13 +30,13 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         <div className="stats-group">
           <div className="stat-item" data-testid="stat-total">
             <span className="stat-label">Total Items</span>
-            <span className="stat-value">{totalCount.toLocaleString()}</span>
+            <span className="stat-value">{totalCount.toLocaleString('en-US')}</span>
           </div>
 
           <div className="stat-item" data-testid="stat-checked">
             <span className="stat-label">Checked</span>
             <span className="stat-value highlight">
-              {checkedCount.toLocaleString()}{' '}
+              {checkedCount.toLocaleString('en-US')}{' '}
               <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: 'var(--text-secondary)' }}>
                 ({percentage}%)
               </span>
