@@ -240,6 +240,82 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ onSelectTab 
           </div>
         </div>
       </div>
+
+      {/* Visual Event Listener Architecture Diagram */}
+      <div className="dashboard-card" style={{ marginTop: '24px' }}>
+        <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '6px' }}>
+          Event Listener Architecture &amp; Performance Impact
+        </h3>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '20px' }}>
+          Visualizing the difference in how event listeners and memory are managed across the different strategies:
+        </p>
+
+        <div className="diagram-container">
+          <div className="diagram-top-box">
+            <span className="diagram-header-label">User Action</span>
+            <div className="user-action-node">User Clicks a Checkbox</div>
+          </div>
+
+          <div className="diagram-columns-grid">
+            {/* Column 1 */}
+            <div className="diagram-column">
+              <span className="diagram-col-title">v1/v2: Standard React Approach</span>
+              <div className="diagram-box">1,000,000 React Components</div>
+              <div className="diagram-connector">
+                <span>creates</span>
+                <span className="diagram-arrow">↓</span>
+              </div>
+              <div className="diagram-diamond">
+                1,000,000+ onClick handlers<br />(in memory)
+              </div>
+              <div className="diagram-connector">
+                <span className="diagram-arrow">↓</span>
+              </div>
+              <div className="diagram-impact-box impact-high">
+                <strong>High Memory Usage</strong><br />Slow Mount &amp; Interaction
+              </div>
+            </div>
+
+            {/* Column 2 */}
+            <div className="diagram-column">
+              <span className="diagram-col-title">v3: Native Event Delegation</span>
+              <div className="diagram-box">Single HTML Container Element</div>
+              <div className="diagram-connector">
+                <span>listens on</span>
+                <span className="diagram-arrow">↓</span>
+              </div>
+              <div className="diagram-diamond accent-purple">
+                1 'click' listener<br />(on container)
+              </div>
+              <div className="diagram-connector">
+                <span className="diagram-arrow">↓</span>
+              </div>
+              <div className="diagram-impact-box impact-med">
+                <strong>Low Memory Usage</strong><br />Fast Mount &amp; Interaction
+              </div>
+            </div>
+
+            {/* Column 3 */}
+            <div className="diagram-column">
+              <span className="diagram-col-title">v4: Virtualization</span>
+              <div className="diagram-box">~30 Visible React Components</div>
+              <div className="diagram-connector">
+                <span>creates</span>
+                <span className="diagram-arrow">↓</span>
+              </div>
+              <div className="diagram-diamond accent-green">
+                ~30 onClick handlers<br />(in memory)
+              </div>
+              <div className="diagram-connector">
+                <span className="diagram-arrow">↓</span>
+              </div>
+              <div className="diagram-impact-box impact-low">
+                <strong>Lowest Memory Usage</strong><br />Instant Mount &amp; Interaction
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
