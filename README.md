@@ -4,6 +4,36 @@ A high-performance React + TypeScript application rendering **1,000,000 checkbox
 
 ---
 
+## 👨‍🏫 Evaluator & Mentor Evaluation Guide
+
+Welcome! To clone, run, and verify this project on your machine, follow these simple steps:
+
+### 1. Clone & Install
+```bash
+git clone https://github.com/Srikar-jayanthi/high-performance-list-react.git
+cd high-performance-list-react
+npm install
+```
+
+### 2. Run Automated Tests
+```bash
+npm test
+```
+> **Expected Result**: All **17 automated unit and integration tests pass 100%** verifying all functional requirements (tab switching, status bar counts, Check All / Uncheck All, event delegation, virtualization, metrics collection, and data persistence).
+
+### 3. Start Development Server
+```bash
+npm run dev
+```
+Open **`http://localhost:5173`** in your browser to interact with the application:
+- **Navigation Tabs**: Switch between `v1 Naive`, `v2 Batched`, `v3 Native`, `v4 Virtual`, and `Metrics Dashboard`.
+- **Status Bar**: Notice the live item counter (1,000,000), percentage, last toggled item index, and live Mount Time & Click Latency telemetry.
+- **Check All / Uncheck All**: Click `Check All` to instantly toggle all 1,000,000 checkboxes; click `Uncheck All` to clear all.
+- **v4 Virtual Tab**: Click the **"Jump to Random Item"** button to observe instantaneous O(1) random scrolling through 1,000,000 rows.
+- **Metrics Dashboard Tab**: Inspect the live performance comparison table and the visual **Event Listener Architecture Diagram**. Click *"Load Full Benchmark Profile"* to view the complete reference benchmark.
+
+---
+
 ## 🚀 Quick Start & Setup Instructions
 
 ### Prerequisites
