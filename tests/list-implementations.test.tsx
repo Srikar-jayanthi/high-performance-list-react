@@ -319,5 +319,38 @@ describe('High-Performance List UI & Event Delegation', () => {
         expect(screen.getByTestId('metric-mountTime-v1')).toHaveTextContent('Visit v1 Naive');
       });
     });
+
+    it('dynamically collects metrics when tabs are visited and persists across navigation (Requirement 11)', async () => {
+      render(<App />);
+
+      // App starts on v4 Virtual - metrics for v4 are collected on mount
+      await waitFor(() => {
+        expect(screen.getByTestId('metric-mount-time')).not.toHaveTextContent('Measuring...');
+      });
+
+      // Visit v3 Native
+      fireEvent.click(screen.getByTestId('tab-v3'));
+      expect(screen.getByTestId('v3-native-container')).toBeInTheDocument();
+
+      // Visit Metrics Dashboard
+      fireEvent.click(screen.getByTestId('tab-metrics'));
+      expect(screen.getByTestId('metrics-dashboard')).toBeInTheDocument();
+
+      // Check that metrics for v4 and v3 are rendered in their columns and persisted
+      await waitFor(() => {
+        expect(screen.getByTestId('metric-eventListeners-v3')).toHaveTextContent('1');
+        expect(screen.getByTestId('metric-mountTime-v4')).not.toHaveTextContent('Visit v4 Virtual');
+      });
+
+      // Switch away to v2 Batched and back to Metrics Dashboard
+      fireEvent.click(screen.getByTestId('tab-v2'));
+      expect(screen.getByTestId('v2-batched-container')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('tab-metrics'));
+      expect(screen.getByTestId('metrics-dashboard')).toBeInTheDocument();
+
+      // Data persists!
+      expect(screen.getByTestId('metric-eventListeners-v3')).toHaveTextContent('1');
+    });
   });
 });
