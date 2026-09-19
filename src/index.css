@@ -107,6 +107,12 @@ body {
   border-radius: var(--radius-lg);
   margin-bottom: 20px;
   overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.tabs-nav::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .tab-button {
